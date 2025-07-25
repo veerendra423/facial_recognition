@@ -1,215 +1,296 @@
-# Dual RTSP Camera Facial Recognition System with Raspberry Pi 5 and DeGirum
+# Dual RTSP Camera Facial Recognition System
 
-A comprehensive facial recognition system using two RTSP cameras on Raspberry Pi 5 with DeGirum AI accelerator for real-time face detection and recognition.
+A comprehensive facial recognition system using two RTSP network cameras with DeGirum AI acceleration for real-time face detection and recognition on Raspberry Pi 5.
 
 ## Features
 
 - **Dual RTSP Camera Support**: Simultaneous processing from two network/IP cameras
-- **Real-time Face Detection**: Using DeGirum optimized models
+- **Real-time Face Detection**: Using DeGirum optimized models with high accuracy
 - **Face Recognition**: DeGirum face recognition models for face matching and identification
 - **Hardware Acceleration**: Leverages DeGirum AI accelerator for efficient inference
 - **Multi-threading**: Concurrent processing of both camera streams
-- **Face Database**: Persistent storage and management of known faces
+- **Face Database**: SQLite database with persistent storage of face embeddings
+- **Face Tracking**: Kalman filter-based tracking across frames
 - **Live Preview**: Real-time display of detection results with bounding boxes
-- **Configuration Management**: Easy setup and configuration for different RTSP sources
-- **Network Resilience**: Automatic reconnection and error handling for RTSP streams
+- **Face Enrollment**: Easy enrollment system via camera or image files
+- **Configuration Management**: YAML-based configuration system
 
-## Hardware Requirements
+## Project Structure
 
-- Raspberry Pi 5 (8GB recommended)
-- DeGirum AI accelerator (USB or PCIe)
-- 2x IP/Network cameras with RTSP support
-- Ethernet connection or Wi-Fi for camera access
-- MicroSD card (64GB or larger, Class 10)
-- Power supply (5V 5A recommended)
+```
+project/
+├── main.py                 # Main application entry point
+├── config.py              # Configuration management
+├── enroll.py              # Face enrollment script
+├── requirements.txt       # Python dependencies
+├── config.yaml            # System configuration file
+├── modules/
+│   ├── detection.py       # Face detection using DeGirum
+│   ├── tracking.py        # Face tracking across frames
+│   ├── recognition.py     # Face recognition and matching
+│   └── logging.py         # System logging utilities
+└── data/                  # Database and embeddings storage
+    ├── face_database.db   # SQLite database (auto-created)
+    └── embeddings/        # Face embedding files (auto-created)
+```
 
-## Software Requirements
+## Requirements
 
-- Raspberry Pi OS Bookworm (64-bit)
-- Python 3.11+
-- DeGirum Runtime and SDK
-- OpenCV 4.x with GStreamer support
-- FFmpeg with RTSP support
+### Hardware
+- Raspberry Pi 5
+- DeGirum AI accelerator (Orca AI accelerator recommended)
+- Two RTSP network cameras
+- Minimum 4GB RAM recommended
+
+### Software
+- Python 3.8+
+- OpenCV 4.5+
+- DeGirum SDK
+- PyYAML
+- NumPy
+- SQLite3
 
 ## Installation
 
-### 1. System Setup
+1. **Clone or create the project directory:**
+   ```bash
+   mkdir dual_camera_face_recognition
+   cd dual_camera_face_recognition
+   ```
 
-```bash
-# Update system
-sudo apt update && sudo apt upgrade -y
+2. **Install Python dependencies:**
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-# Install required packages
-sudo apt install -y python3-pip python3-venv git cmake build-essential
-sudo apt install -y python3-opencv ffmpeg
-sudo apt install -y gstreamer1.0-plugins-base gstreamer1.0-plugins-good
-sudo apt install -y gstreamer1.0-plugins-bad gstreamer1.0-libav
-```
+3. **Install DeGirum SDK:**
+   ```bash
+   # Follow DeGirum installation instructions for your platform
+   pip install degirum
+   ```
 
-### 2. DeGirum Setup
+4. **Install system dependencies (Ubuntu/Debian):**
+   ```bash
+   sudo apt update
+   sudo apt install -y python3-opencv ffmpeg
+   ```
 
-Follow the official DeGirum installation guide:
-
-```bash
-# Install DeGirum SDK
-pip install degirum
-
-# Verify installation
-python3 -c "import degirum as dg; print(dg.__version__)"
-```
-
-### 3. Clone and Install
-
-```bash
-git clone <repository-url>
-cd facial_recognition
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-```
-
-## Configuration
-
-### RTSP Camera Setup
-
-Configure your IP cameras with RTSP streams in the configuration file:
-
-```yaml
-cameras:
-  camera_0:
-    rtsp_url: "rtsp://user:password@192.168.1.100:554/stream1"
-    name: "Front Door Camera"
-    enabled: true
-    
-  camera_1:
-    rtsp_url: "rtsp://user:password@192.168.1.101:554/stream1"
-    name: "Back Door Camera"
-    enabled: true
-```
-
-### DeGirum Models
-
-The system uses DeGirum's pre-trained models:
-- Face detection model from DeGirum model zoo
-- Face recognition/embedding model from DeGirum model zoo
+5. **Configure your cameras:**
+   Edit `config.yaml` and update the RTSP URLs for your cameras:
+   ```yaml
+   cameras:
+     camera_0:
+       rtsp_url: rtsp://admin:password@192.168.1.100:554/stream1
+     camera_1:
+       rtsp_url: rtsp://admin:password@192.168.1.101:554/stream1
+   ```
 
 ## Usage
 
-### Basic Operation
+### 1. Face Enrollment
 
+Before running the main system, you need to enroll faces in the database.
+
+**Enroll from camera (webcam):**
 ```bash
-# Run dual RTSP camera facial recognition
-python3 dual_rtsp_face_recognition.py
-
-# Run with specific configuration
-python3 dual_rtsp_face_recognition.py --config config/dual_rtsp.yaml
+python enroll.py --name "John Doe"
 ```
 
-### Face Database Management
-
+**Enroll from RTSP camera:**
 ```bash
-# Add new face to database
-python3 face_database.py --add --name "John Doe" --image path/to/image.jpg
-
-# List registered faces
-python3 face_database.py --list
-
-# Remove face from database
-python3 face_database.py --remove --name "John Doe"
+python enroll.py --name "John Doe" --camera "rtsp://admin:password@192.168.1.100:554/stream1"
 ```
 
-### RTSP Stream Testing
-
+**Enroll from image file:**
 ```bash
-# Test RTSP connection
-python3 tools/test_rtsp.py --url "rtsp://user:password@192.168.1.100:554/stream1"
-
-# View RTSP stream
-ffplay "rtsp://user:password@192.168.1.100:554/stream1"
+python enroll.py --name "John Doe" --image "path/to/photo.jpg"
 ```
 
-## Architecture
+**List enrolled persons:**
+```bash
+python enroll.py --list
+```
 
-The system consists of several key components:
+**Remove a person:**
+```bash
+python enroll.py --remove "John Doe"
+```
 
-1. **RTSP Stream Manager**: Handles RTSP stream connections and frame capture
-2. **DeGirum Inference Engine**: Manages AI model loading and inference
-3. **Face Detection Pipeline**: DeGirum-based detection pipeline
-4. **Face Recognition Pipeline**: DeGirum-based recognition pipeline
-5. **Face Database**: SQLite-based storage for face embeddings
-6. **Display Manager**: Real-time visualization of results
-7. **Configuration Manager**: YAML-based configuration system
-8. **Stream Reconnection Handler**: Automatic RTSP reconnection logic
+### 2. Run the Main System
 
-## Performance
+**Start the dual camera system:**
+```bash
+python main.py
+```
 
-- **Face Detection**: ~20-30 FPS per camera on DeGirum accelerator
-- **Face Recognition**: ~10-15 FPS per camera with database lookup
-- **Memory Usage**: ~1.5GB RAM typical usage
-- **Latency**: <150ms end-to-end processing time (including network)
-- **Network**: Supports multiple RTSP stream formats (H.264, H.265)
+**Run with custom configuration:**
+```bash
+python main.py --config custom_config.yaml
+```
 
-## Supported RTSP Camera Formats
+**Run without display (headless mode):**
+```bash
+python main.py --no-display
+```
 
-- **Video Codecs**: H.264, H.265/HEVC, MJPEG
-- **Resolutions**: 720p, 1080p, 4K (auto-scaling)
-- **Protocols**: RTSP/RTP, RTSP/TCP, RTSP/UDP
-- **Authentication**: Basic, Digest
-- **Popular Brands**: Hikvision, Dahua, Axis, Bosch, Uniview, Reolink
+**Run with debug logging:**
+```bash
+python main.py --debug
+```
 
-## RTSP URL Examples
+### 3. System Controls
 
+While the system is running:
+- **Press 'q' or ESC**: Quit the application
+- **Display shows**: 
+  - Camera feeds side by side
+  - Face detection bounding boxes
+  - Person names and confidence scores
+  - System statistics (FPS, detection counts)
+
+## Configuration
+
+The system uses a YAML configuration file (`config.yaml`) with the following sections:
+
+### Cameras
 ```yaml
-# Hikvision
-rtsp_url: "rtsp://admin:password@192.168.1.100:554/Streaming/Channels/101"
-
-# Dahua
-rtsp_url: "rtsp://admin:password@192.168.1.101:554/cam/realmonitor?channel=1&subtype=0"
-
-# Axis
-rtsp_url: "rtsp://user:password@192.168.1.102/axis-media/media.amp"
-
-# Generic IP Camera
-rtsp_url: "rtsp://admin:password@192.168.1.103:554/stream1"
+cameras:
+  camera_0:
+    enabled: true
+    name: "Front Door Camera"
+    rtsp_url: "rtsp://admin:password@192.168.1.100:554/stream1"
+    connection:
+      timeout: 10
+      reconnect_attempts: 5
+      buffer_size: 1
 ```
 
-## Applications
+### DeGirum Models
+```yaml
+degirum:
+  device:
+    type: auto  # auto, cpu, gpu, orca
+    device_id: 0
+  face_detection:
+    model_name: "mobilenet_v2_ssd_coco--300x300_quant_n2x_orca1_1"
+    confidence_threshold: 0.6
+    nms_threshold: 0.4
+  face_recognition:
+    model_name: "facenet_keras--160x160_quant_n2x_orca1_1"
+    similarity_threshold: 0.7
+```
 
-- **Security Systems**: Multi-point access control with IP cameras
-- **Retail Analytics**: Customer recognition across multiple camera views
-- **Smart Building**: Distributed facial recognition system
-- **Perimeter Security**: Multi-camera surveillance with face identification
-- **Access Control**: Building entry/exit monitoring
+### Database
+```yaml
+database:
+  path: "data/face_database.db"
+  embeddings_path: "data/embeddings/"
+  max_faces_per_person: 10
+  similarity_threshold: 0.7
+```
+
+## DeGirum Models
+
+The system supports various DeGirum models:
+
+### Face Detection Models
+- `mobilenet_v2_ssd_coco--300x300_quant_n2x_orca1_1`
+- `yolo_v5s_face_detection--640x640_quant_n2x_orca1_1`
+- `retinaface_mobilenet_v1--1024x1024_quant_n2x_orca1_1`
+
+### Face Recognition Models
+- `facenet_keras--160x160_quant_n2x_orca1_1`
+- `arcface_resnet50--112x112_quant_n2x_orca1_1`
+- `sphereface_resnet50--112x112_quant_n2x_orca1_1`
+
+## Performance Optimization
+
+### For Raspberry Pi 5:
+1. **Use hardware acceleration**: Ensure DeGirum Orca accelerator is properly installed
+2. **Optimize camera settings**: Use appropriate resolution and frame rate
+3. **Adjust buffer sizes**: Set camera buffer size to 1 for low latency
+4. **Monitor system resources**: Check CPU and memory usage
+
+### Camera Settings:
+```yaml
+cameras:
+  camera_0:
+    connection:
+      buffer_size: 1        # Reduce latency
+      timeout: 10           # Connection timeout
+      reconnect_attempts: 5 # Auto-reconnect attempts
+```
 
 ## Troubleshooting
 
-### Common RTSP Issues
+### Common Issues:
 
-1. **Connection Timeout**: Check network connectivity and camera accessibility
-2. **Authentication Failed**: Verify username/password and camera settings
-3. **Stream Not Found**: Confirm RTSP URL format and stream availability
-4. **Codec Issues**: Ensure FFmpeg/GStreamer codec support
+1. **Camera connection failed:**
+   - Check RTSP URL format
+   - Verify camera credentials
+   - Test camera with VLC or similar player
 
-### Performance Optimization
+2. **DeGirum model loading failed:**
+   - Ensure DeGirum SDK is properly installed
+   - Check model names in configuration
+   - Verify hardware accelerator connection
 
-1. **Stream Quality**: Adjust camera bitrate and resolution
-2. **Network Latency**: Use wired connections when possible
-3. **Buffer Management**: Tune buffer sizes for your network conditions
-4. **Model Selection**: Choose appropriate DeGirum models for your hardware
+3. **Low FPS performance:**
+   - Reduce camera resolution
+   - Check system resources
+   - Verify hardware acceleration is working
 
-Common issues and solutions are documented in the [troubleshooting guide](docs/troubleshooting.md).
+4. **Face detection not working:**
+   - Adjust confidence threshold
+   - Check lighting conditions
+   - Verify camera focus and positioning
 
-## Contributing
+### Debug Mode:
+```bash
+python main.py --debug
+```
 
-Contributions are welcome! Please read our [contributing guidelines](CONTRIBUTING.md) before submitting pull requests.
+This enables detailed logging to help identify issues.
+
+## System Architecture
+
+```
+┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
+│   RTSP Camera   │────│  Camera Thread   │────│  Frame Buffer   │
+│   (Camera 0)    │    │                  │    │                 │
+└─────────────────┘    └──────────────────┘    └─────────────────┘
+                                                         │
+┌─────────────────┐    ┌──────────────────┐             │
+│   RTSP Camera   │────│  Camera Thread   │─────────────┤
+│   (Camera 1)    │    │                  │             │
+└─────────────────┘    └──────────────────┘             │
+                                                         │
+                       ┌──────────────────┐             │
+                       │ Processing Thread│◄────────────┘
+                       │                  │
+                       └─────────┬────────┘
+                                 │
+               ┌─────────────────┼─────────────────┐
+               │                 │                 │
+         ┌─────▼──────┐  ┌──────▼──────┐  ┌──────▼──────┐
+         │ Detection  │  │ Recognition │  │  Tracking   │
+         │ (DeGirum)  │  │ (DeGirum)   │  │ (Kalman)    │
+         └────────────┘  └─────────────┘  └─────────────┘
+                                 │
+                         ┌──────▼──────┐
+                         │  Database   │
+                         │ (SQLite)    │
+                         └─────────────┘
+```
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is for educational and research purposes. Please ensure compliance with DeGirum SDK license terms and camera usage regulations.
 
-## Acknowledgments
+## Support
 
-- DeGirum for the AI acceleration platform and model zoo
-- Raspberry Pi Foundation for the hardware platform
-- OpenCV and FFmpeg communities for video processing tools
-- IP camera manufacturers for RTSP protocol support
+For issues and questions:
+1. Check the troubleshooting section
+2. Enable debug mode for detailed logs
+3. Verify hardware and software requirements
+4. Check DeGirum SDK documentation for model-specific issues
