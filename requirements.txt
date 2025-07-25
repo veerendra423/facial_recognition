@@ -1,0 +1,38 @@
+numpy>=1.21.0
+opencv-python>=4.5.0
+Pillow>=8.3.0
+PyYAML>=6.0
+sqlite3
+threading
+queue
+dataclasses
+typing
+argparse
+pathlib
+datetime
+logging
+configparser
+pickle
+json
+base64
+hashlib
+uuid
+time
+math
+collections
+# Raspberry Pi specific packages
+# Note: These should be installed via apt on Raspberry Pi
+# picamera2 - Install via: sudo apt install python3-picamera2
+# hailo - Comes with HailoRT installation
+# gi - Install via: sudo apt install python3-gi
+
+# Optional packages for advanced features
+scipy>=1.7.0
+scikit-learn>=1.0.0
+matplotlib>=3.5.0
+seaborn>=0.11.0
+
+# Development and testing
+pytest>=6.0.0
+black>=21.0.0
+flake8>=3.9.0
