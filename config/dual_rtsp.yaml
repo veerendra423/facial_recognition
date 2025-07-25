@@ -1,0 +1,313 @@
+# Dual RTSP Camera Facial Recognition Configuration with DeGirum
+
+# RTSP Camera Settings
+cameras:
+  camera_0:
+    rtsp_url: "rtsp://admin:password@192.168.1.100:554/stream1"
+    name: "Front Door Camera"
+    enabled: true
+    # Connection settings
+    connection:
+      timeout: 10  # seconds
+      reconnect_interval: 5  # seconds
+      max_reconnect_attempts: 10
+      tcp_transport: true  # Use TCP instead of UDP for reliability
+      buffer_size: 3  # Number of frames to buffer
+    # Stream settings
+    stream:
+      width: 1920
+      height: 1080
+      fps: 30
+      # Auto-scaling settings
+      scale_to_width: 1280  # Scale down for processing
+      scale_to_height: 720
+      maintain_aspect_ratio: true
+    # Quality settings
+    quality:
+      brightness_adjustment: 0  # -100 to 100
+      contrast_adjustment: 0    # -100 to 100
+      saturation_adjustment: 0  # -100 to 100
+      
+  camera_1:
+    rtsp_url: "rtsp://admin:password@192.168.1.101:554/stream1"
+    name: "Back Door Camera"
+    enabled: true
+    connection:
+      timeout: 10
+      reconnect_interval: 5
+      max_reconnect_attempts: 10
+      tcp_transport: true
+      buffer_size: 3
+    stream:
+      width: 1920
+      height: 1080
+      fps: 30
+      scale_to_width: 1280
+      scale_to_height: 720
+      maintain_aspect_ratio: true
+    quality:
+      brightness_adjustment: 0
+      contrast_adjustment: 0
+      saturation_adjustment: 0
+
+# DeGirum AI Configuration for High Accuracy
+degirum:
+  # Device configuration
+  device:
+    type: "auto"  # auto, cpu, gpu, tpu, orca
+    device_id: 0
+    
+  # Model configuration for face detection
+  face_detection:
+    model_name: "mobilenet_v2_ssd_coco--300x300_quant_n2x_orca1_1"
+    # Alternative high-accuracy models:
+    # "yolo_v5s_face_detection--640x640_quant_n2x_orca1_1"
+    # "retinaface_mobilenet_v1--1024x1024_quant_n2x_orca1_1"
+    
+    # Model parameters for accuracy
+    confidence_threshold: 0.6  # Higher threshold for better accuracy
+    nms_threshold: 0.4
+    max_detections: 20
+    
+    # Input preprocessing
+    input_size: [640, 640]  # Higher resolution for better accuracy
+    mean: [0.485, 0.456, 0.406]
+    std: [0.229, 0.224, 0.225]
+    
+    # Post-processing
+    min_face_size: 50  # Minimum face size in pixels
+    max_face_size: 500  # Maximum face size in pixels
+    
+  # Model configuration for face recognition
+  face_recognition:
+    model_name: "facenet_keras--160x160_quant_n2x_orca1_1"
+    # Alternative high-accuracy models:
+    # "arcface_resnet50--112x112_quant_n2x_orca1_1"
+    # "sphereface_resnet50--112x112_quant_n2x_orca1_1"
+    
+    # Recognition parameters
+    embedding_size: 512
+    similarity_threshold: 0.65  # Higher threshold for better accuracy
+    input_size: [160, 160]  # Match model requirements
+    
+    # Face alignment and preprocessing
+    enable_face_alignment: true
+    alignment_method: "landmarks"  # landmarks, affine, similarity
+    crop_margin: 0.3  # Margin around detected face
+    
+# Face Database Configuration
+database:
+  path: "data/face_database.db"
+  embeddings_path: "data/embeddings/"
+  backup_enabled: true
+  backup_interval: 3600  # seconds
+  max_faces_per_person: 20  # More faces for better accuracy
+  
+  # Quality filtering
+  quality_threshold: 0.7  # Minimum quality score for storing faces
+  duplicate_threshold: 0.9  # Threshold for detecting duplicate faces
+  
+  # Database optimization
+  enable_indexing: true
+  similarity_search_method: "cosine"  # cosine, euclidean, manhattan
+
+# Processing Configuration for Accuracy
+processing:
+  # Face detection settings
+  detection:
+    max_faces_per_frame: 15
+    min_face_confidence: 0.6
+    enable_multi_scale: true  # Detect faces at multiple scales
+    scale_factors: [0.5, 0.75, 1.0, 1.25]
+    
+  # Face recognition settings  
+  recognition:
+    enable_quality_check: true
+    quality_metrics: ["blur", "brightness", "pose"]
+    min_quality_score: 0.6
+    
+    # Face enhancement
+    enable_face_enhancement: true
+    enhancement_method: "histogram_equalization"  # histogram_equalization, clahe, gamma
+    
+    # Multi-frame aggregation for accuracy
+    enable_temporal_smoothing: true
+    smoothing_window_size: 5  # Number of frames to average
+    
+  # Threading and performance
+  parallel_processing: true
+  queue_size: 15
+  worker_threads: 4
+  
+# Display Configuration
+display:
+  enabled: true
+  window_size:
+    width: 1920
+    height: 1080
+  layout: "side_by_side"  # side_by_side, top_bottom, overlay, grid
+  
+  # Visualization settings
+  show_fps: true
+  show_confidence: true
+  show_similarity_scores: true
+  show_quality_metrics: true
+  show_face_landmarks: false
+  
+  # Styling
+  bbox_color: [0, 255, 0]  # BGR - Green for known faces
+  unknown_bbox_color: [0, 0, 255]  # BGR - Red for unknown faces
+  bbox_thickness: 3
+  text_color: [255, 255, 255]  # BGR - White text
+  text_scale: 0.8
+  text_thickness: 2
+  background_opacity: 0.7
+  
+  # Information overlay
+  show_camera_info: true
+  show_system_stats: true
+  show_detection_count: true
+
+# Performance Settings Optimized for Accuracy
+performance:
+  inference_threads: 2
+  capture_threads: 2
+  display_threads: 1
+  
+  # Buffer management
+  frame_buffer_size: 10
+  result_buffer_size: 20
+  
+  # Processing optimization
+  skip_frames: 0  # Process every frame for maximum accuracy
+  batch_processing: false  # Disable batching for real-time accuracy
+  
+  # Memory management
+  max_memory_usage: 2048  # MB
+  garbage_collection_interval: 60  # seconds
+
+# Logging Configuration
+logging:
+  level: "INFO"  # DEBUG, INFO, WARNING, ERROR
+  file: "logs/rtsp_facial_recognition.log"
+  max_size: 10485760  # 10MB
+  backup_count: 5
+  console_output: true
+  
+  # Component-specific logging
+  components:
+    rtsp_manager: "INFO"
+    degirum_engine: "INFO"
+    face_database: "INFO"
+    display_manager: "INFO"
+
+# Security and Accuracy Settings
+security:
+  enable_face_matching: true
+  unknown_face_threshold: 0.7
+  max_unknown_faces: 200
+  
+  # Advanced security features
+  enable_liveness_detection: false  # Requires specialized models
+  enable_spoofing_detection: false
+  
+  # Face tracking for accuracy
+  face_tracking: true
+  track_timeout: 30  # seconds
+  tracking_method: "kalman"  # kalman, optical_flow, correlation
+  
+  # Multi-frame verification
+  enable_multi_frame_verification: true
+  verification_frames: 3  # Number of consecutive frames for verification
+  verification_threshold: 0.7
+
+# Alert System
+alerts:
+  enabled: true
+  
+  # Recognition alerts
+  known_face_detected: true
+  unknown_face_detected: true
+  multiple_faces_detected: true
+  
+  # System alerts
+  camera_disconnected: true
+  low_accuracy_warning: true
+  system_performance_warning: true
+  
+  # Notification methods
+  webhook_url: ""
+  email_notifications: false
+  smtp_server: ""
+  smtp_port: 587
+  email_username: ""
+  email_password: ""
+  recipients: []
+
+# Storage Settings
+storage:
+  save_detections: true
+  save_unknown_faces: true
+  save_high_quality_faces: true
+  
+  # Image settings
+  image_format: "jpg"
+  image_quality: 95  # Higher quality for accuracy analysis
+  save_original_resolution: false
+  
+  # Storage management
+  storage_path: "data/captures/"
+  max_storage_size: 2147483648  # 2GB
+  cleanup_interval: 86400  # 24 hours
+  retention_days: 30
+
+# Advanced Features for Accuracy
+advanced:
+  # Model ensemble for higher accuracy
+  enable_model_ensemble: false
+  ensemble_models: []
+  ensemble_voting_method: "weighted_average"
+  
+  # Adaptive thresholds
+  enable_adaptive_thresholds: true
+  threshold_adaptation_rate: 0.1
+  min_threshold: 0.4
+  max_threshold: 0.9
+  
+  # Environmental adaptation
+  enable_lighting_adaptation: true
+  enable_weather_compensation: false
+  
+  # Continuous learning
+  enable_online_learning: false
+  learning_rate: 0.001
+  max_learning_samples: 1000
+
+# Network and RTSP Optimization
+network:
+  # Connection optimization
+  connection_pool_size: 10
+  keep_alive_timeout: 30
+  retry_strategy: "exponential_backoff"
+  
+  # Bandwidth optimization
+  enable_adaptive_bitrate: true
+  max_bitrate: 8000  # kbps
+  min_bitrate: 1000  # kbps
+  
+  # Latency optimization
+  low_latency_mode: true
+  jitter_buffer_size: 3
+  
+# Debug Settings
+debug:
+  save_debug_images: false
+  debug_path: "debug/"
+  show_detection_info: false
+  benchmark_mode: false
+  profile_performance: false
+  
+  # Model debugging
+  save_model_inputs: false
+  save_model_outputs: false
+  enable_model_profiling: false
