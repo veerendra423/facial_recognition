@@ -1,20 +1,33 @@
 cameras:
   camera_0:
     enabled: true
-    name: Front Door Camera
+    name: Entry Camera
+    type: entry  # entry or exit
     rtsp_url: rtsp://admin:password@192.168.1.100:554/stream1
     connection:
       timeout: 10
       reconnect_attempts: 5
       buffer_size: 1
+    counting:
+      direction: entry  # entry or exit
+      detection_line: 0.5  # normalized position (0.0 to 1.0) across frame
+      line_direction: horizontal  # horizontal or vertical
+      minimum_time: 2.0  # minimum time in seconds for valid detection
+      
   camera_1:
     enabled: true
-    name: Back Door Camera
+    name: Exit Camera
+    type: exit  # entry or exit
     rtsp_url: rtsp://admin:password@192.168.1.101:554/stream1
     connection:
       timeout: 10
       reconnect_attempts: 5
       buffer_size: 1
+    counting:
+      direction: exit  # entry or exit
+      detection_line: 0.5  # normalized position (0.0 to 1.0) across frame
+      line_direction: horizontal  # horizontal or vertical
+      minimum_time: 2.0  # minimum time in seconds for valid detection
 
 degirum:
   device:
@@ -44,6 +57,8 @@ display:
     height: 720
   show_fps: true
   show_confidence: true
+  show_counts: true  # Show entry/exit counts on display
+  show_detection_lines: true  # Show counting lines on display
 
 logging:
   level: INFO
@@ -57,3 +72,11 @@ processing:
   min_face_size: 40
   face_padding: 0.2
   quality_threshold: 0.6
+
+counting:
+  enable_cross_camera_tracking: true  # Track same person across cameras
+  person_timeout: 30.0  # seconds before person is considered left
+  counting_log_file: logs/counting.log
+  daily_reset: true  # Reset counts at midnight
+  save_snapshots: true  # Save images of counted persons
+  snapshots_path: data/snapshots/
