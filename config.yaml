@@ -1,0 +1,82 @@
+cameras:
+  camera_0:
+    enabled: true
+    name: Entry Camera
+    type: entry  # entry or exit
+    rtsp_url: rtsp://admin:password@192.168.1.100:554/stream1
+    connection:
+      timeout: 10
+      reconnect_attempts: 5
+      buffer_size: 1
+    counting:
+      direction: entry  # entry or exit
+      detection_line: 0.5  # normalized position (0.0 to 1.0) across frame
+      line_direction: horizontal  # horizontal or vertical
+      minimum_time: 2.0  # minimum time in seconds for valid detection
+      
+  camera_1:
+    enabled: true
+    name: Exit Camera
+    type: exit  # entry or exit
+    rtsp_url: rtsp://admin:password@192.168.1.101:554/stream1
+    connection:
+      timeout: 10
+      reconnect_attempts: 5
+      buffer_size: 1
+    counting:
+      direction: exit  # entry or exit
+      detection_line: 0.5  # normalized position (0.0 to 1.0) across frame
+      line_direction: horizontal  # horizontal or vertical
+      minimum_time: 2.0  # minimum time in seconds for valid detection
+
+degirum:
+  device:
+    type: auto  # auto, cpu, gpu, orca
+    device_id: 0
+  face_detection:
+    model_name: mobilenet_v2_ssd_coco--300x300_quant_n2x_orca1_1
+    confidence_threshold: 0.6
+    nms_threshold: 0.4
+    input_size: [300, 300]
+  face_recognition:
+    model_name: facenet_keras--160x160_quant_n2x_orca1_1
+    similarity_threshold: 0.7
+    input_size: [160, 160]
+    embedding_size: 512
+
+database:
+  path: data/face_database.db
+  embeddings_path: data/embeddings/
+  max_faces_per_person: 10
+  similarity_threshold: 0.7
+
+display:
+  enabled: true
+  window_size:
+    width: 1280
+    height: 720
+  show_fps: true
+  show_confidence: true
+  show_counts: true  # Show entry/exit counts on display
+  show_detection_lines: true  # Show counting lines on display
+
+logging:
+  level: INFO
+  file: logs/system.log
+  max_size: 10485760  # 10MB
+  backup_count: 5
+  console_output: true
+
+processing:
+  max_faces_per_frame: 10
+  min_face_size: 40
+  face_padding: 0.2
+  quality_threshold: 0.6
+
+counting:
+  enable_cross_camera_tracking: true  # Track same person across cameras
+  person_timeout: 30.0  # seconds before person is considered left
+  counting_log_file: logs/counting.log
+  daily_reset: true  # Reset counts at midnight
+  save_snapshots: true  # Save images of counted persons
+  snapshots_path: data/snapshots/

@@ -1,0 +1,125 @@
+# Dual Camera Facial Recognition Configuration
+
+# Camera Settings
+cameras:
+  camera_0:
+    index: 0
+    name: "Camera 0 (CAM0)"
+    resolution:
+      width: 1280
+      height: 720
+    framerate: 30
+    format: "NV12"
+    enabled: true
+    
+  camera_1:
+    index: 1
+    name: "Camera 1 (CAM1)"
+    resolution:
+      width: 1280
+      height: 720
+    framerate: 30
+    format: "NV12"
+    enabled: true
+
+# Hailo AI Model Configuration
+hailo:
+  models:
+    face_detection:
+      model_path: "/home/pi/hailo-ai/models/retinaface_mobilenet_v1.hef"
+      post_process_so: "/usr/lib/aarch64-linux-gnu/post_processes/libface_detection_post.so"
+      function_name: "retinaface"
+      confidence_threshold: 0.5
+      nms_threshold: 0.45
+      
+    face_recognition:
+      model_path: "/home/pi/hailo-ai/models/arcface_mobilefacenet_2022-09.hef"
+      post_process_so: "/usr/lib/aarch64-linux-gnu/post_processes/libface_recognition_post.so"
+      function_name: "arcface"
+      embedding_size: 512
+      similarity_threshold: 0.6
+
+# Face Database Configuration
+database:
+  path: "data/face_database.db"
+  embeddings_path: "data/embeddings/"
+  backup_enabled: true
+  backup_interval: 3600  # seconds
+  max_faces_per_person: 10
+
+# Processing Configuration
+processing:
+  max_faces_per_frame: 10
+  min_face_size: 40  # pixels
+  face_padding: 0.2  # percentage
+  parallel_processing: true
+  queue_size: 10
+  
+# Display Configuration
+display:
+  enabled: true
+  window_size:
+    width: 1920
+    height: 1080
+  layout: "side_by_side"  # options: side_by_side, top_bottom, overlay
+  show_fps: true
+  show_confidence: true
+  show_landmarks: false
+  bbox_color: [0, 255, 0]  # BGR
+  bbox_thickness: 2
+  text_color: [255, 255, 255]  # BGR
+  text_scale: 0.7
+  text_thickness: 2
+
+# Performance Settings
+performance:
+  inference_threads: 2
+  capture_threads: 2
+  display_threads: 1
+  buffer_size: 5
+  skip_frames: 0  # Skip N frames between processing
+  
+# Logging Configuration
+logging:
+  level: "INFO"  # DEBUG, INFO, WARNING, ERROR
+  file: "logs/facial_recognition.log"
+  max_size: 10485760  # 10MB
+  backup_count: 5
+  console_output: true
+
+# Security Settings
+security:
+  enable_face_matching: true
+  unknown_face_threshold: 0.7
+  max_unknown_faces: 100
+  face_tracking: true
+  track_timeout: 30  # seconds
+
+# Alert System
+alerts:
+  enabled: false
+  webhook_url: ""
+  email_notifications: false
+  smtp_server: ""
+  smtp_port: 587
+  email_username: ""
+  email_password: ""
+  recipients: []
+
+# Storage Settings
+storage:
+  save_detections: false
+  save_unknown_faces: true
+  image_format: "jpg"
+  image_quality: 85
+  storage_path: "data/captures/"
+  max_storage_size: 1073741824  # 1GB in bytes
+  cleanup_interval: 86400  # 24 hours in seconds
+
+# Debug Settings
+debug:
+  save_debug_images: false
+  debug_path: "debug/"
+  show_detection_info: false
+  benchmark_mode: false
+  profile_performance: false
